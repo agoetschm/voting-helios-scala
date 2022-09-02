@@ -8,7 +8,7 @@
 #### Motivation
 E-voting feels like a quite important topic for our society and is technically interesting.
 
-After reading some papers and watching some videos one can get an idea of the current state of research. But understanding how these protocols work and why they are secure or not requires a deeper dive. After getting a bit lost since the articles usually point to others which in turn refer to some obscure encryption scheme etc, I thought a bit of hands-on experimenting could be helpful.
+After reading some papers and watching some videos, one can get an idea of the current state of research. But understanding how these protocols work and why they are secure or not requires a deeper dive. After getting a bit lost since the articles usually point to others which in turn refer to some obscure encryption scheme etc, I thought a bit of hands-on experimenting could be helpful.
 
 #### Getting started
 ```
@@ -66,14 +66,21 @@ Note that the first two package aim to be "data type agnostic". Every class has 
 - the ballots are tallied by multiplying the elements corresponding to the same candidate
 - because ElGamal is homomorphic, the resulting product is the encryption of the sum of the votes
   - ElGamal.enc(a) * ElGamal.enc(b) = ElGamal.enc(a + b)
-- the voting organizer who holds the key can reveal the result
+- the voting organizer who holds the secret key can reveal the result
 
 Note that the current implementation does not handle mutliple trustees and distributed encryption (yet!): there is only one private key to reveal the voting result.
+
 #### Proofs of knowledge
-TODO
+In general, a [zero-knowlege proof](https://en.m.wikipedia.org/wiki/Zero-knowledge_proof) is a protocol where a prover P convinces a verifier V that she holds a piece of information without revealing anything about it. 
+A proof can be made non-interactive by using a so called [Fiat-Shamir](https://en.m.wikipedia.org/wiki/Fiat%E2%80%93Shamir_heuristic) transformation, which replaces the challenge sent by V with the hash of a public value.
+
+In our case, each voter has to convince any observer that its ballot contains only encryptions of 0 or 1.
+This is achieved with a "disjunctive proof of log equality", c.f. [Cortier2013] for a nice explanation.
 
 #### A possible attack
-the consequence: duplicating ballot -> breach privacy if a ballot is duplicated enough time to make the effect observable on the result of the voting process
+As explained in [Bernhard2012], ElGamal as well as the Fiat-Shamir transformation used in Helios are [malleable](https://en.m.wikipedia.org/wiki/Malleability_(cryptography)), which means that a ballot can be duplicated by re-randomization.
+A possible consequence is that some malicious voters can collude against another one by duplicating its vote, which allows them to gain some information about it if they are numerous enough.
+This breaches ballot privacy.
 
 ### References
 
