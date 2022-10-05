@@ -38,7 +38,7 @@ type N = Nat.N3.type // we have 3 candidates in this election
       accMaybeBb match
         case l @ Left(_) => l
         case Right(accBb) =>
-          helios.processBallot(ballot, pk, accBb)
+          helios.cast(ballot, pk, accBb)
     }
 
   maybeUpdatedBb match
@@ -88,7 +88,7 @@ def printSetup(
   println("")
   println(s"Domain    : p=${domain.base.p} q=${domain.exponent.q} g=${domain.generator.g.z}")
   println(s"Secret key: x=${sk.x.z}")
-  println(s"Public key: x=${pk.h.z}")
+  println(s"Public key: h=${pk.h.z}")
   println()
   println(
     s"Proof of key generation: (${pk.proofOfGen.commit.z}, ${pk.proofOfGen.challenge.z}, ${pk.proofOfGen.solution.z})"

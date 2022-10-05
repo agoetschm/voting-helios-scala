@@ -14,5 +14,5 @@ class Random[Z: Integral](val source: () => Z):
       G <: Group[Z, E, F, B, G],
       Gen <: Generator[Z, E, F, B, G],
       D <: Domain[Z, E, F, B, G, Gen]
-  ](domain: D) =
+  ](domain: D): () => E =
     () => domain.exponent(source())

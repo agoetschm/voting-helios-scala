@@ -26,7 +26,6 @@ object Group:
     def inv: B
     def ^(e: E): B
     def /(b: B): B = *(b.inv)
-
 trait Group[
     Z: Integral,
     E <: Field.Element[Z, E],
@@ -36,6 +35,7 @@ trait Group[
 ]:
   val order: Z
   def apply(z: Z): B
+
 trait Generator[
     Z: Integral,
     E <: Field.Element[Z, E],
@@ -54,6 +54,6 @@ trait Domain[
     G <: Group[Z, E, F, B, G],
     Gen <: Generator[Z, E, F, B, G]
 ]:
-  val exponent: F
   val base: G
+  val exponent: F
   val generator: Gen

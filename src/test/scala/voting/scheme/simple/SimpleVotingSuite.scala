@@ -5,7 +5,7 @@ import voting.scheme.definition.BallotProcessingError
 import scala.util.Random
 
 class SimpleVotingSuite extends munit.FunSuite:
-  test("run voting session") {
+  test("voting session is successful") {
     val random         = Random(seed = 42)
     val numberOfVoters = 100
     val votes: Seq[Vote] =
@@ -21,7 +21,7 @@ class SimpleVotingSuite extends munit.FunSuite:
         accMaybeBb match
           case l @ Left(_) => l
           case Right(accBb) =>
-            SimpleVoting.processBallot(ballot, (), accBb)
+            SimpleVoting.cast(ballot, (), accBb)
       }
 
     maybeUpdatedBb match

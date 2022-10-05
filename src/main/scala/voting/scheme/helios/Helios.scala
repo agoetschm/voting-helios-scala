@@ -82,7 +82,7 @@ class Helios[N <: Nat]
         Hash.onDomain(pubKey.domain)
       )
 
-  override val processBallot =
+  override val cast =
     (ballot: Ballot[N], pubKey: PublicKey, bb: BulletinBoard[N]) =>
       // TODO check for duplicates
       if (verifyBallot(ballot, pubKey))

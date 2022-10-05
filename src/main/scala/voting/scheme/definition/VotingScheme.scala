@@ -22,7 +22,7 @@ package voting.scheme.definition
 trait VotingScheme[X, Y, V, B, BB, TR, VR, D, R]:
   val setup: (D, R) => (X, Y, BB)
   val vote: (V, Y, R) => B
-  val processBallot: (B, Y, BB) => Either[BallotProcessingError, BB]
+  val cast: (B, Y, BB) => Either[BallotProcessingError, BB]
   val tally: (BB, Y) => TR
   val reveal: (BB, TR, X, R) => VR
 

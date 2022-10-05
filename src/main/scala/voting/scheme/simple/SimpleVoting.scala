@@ -26,8 +26,7 @@ object SimpleVoting
   override val vote: (Vote, Unit, Unit) => Ballot =
     (vote: Vote, _, _) => vote
 
-  override val processBallot
-      : (Ballot, Unit, BulletinBoard) => Either[BallotProcessingError, BulletinBoard] =
+  override val cast: (Ballot, Unit, BulletinBoard) => Either[BallotProcessingError, BulletinBoard] =
     (ballot: Ballot, _, bulletinBoard: BulletinBoard) => Right(bulletinBoard :+ ballot)
 
   override val tally: (BulletinBoard, Unit) => TallyResult =

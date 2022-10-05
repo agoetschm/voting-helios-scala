@@ -1,0 +1,250 @@
+= Experimenting with voting schemes
+:toc:
+
+*Disclaimer*: In general it is a bad idea to https://security.stackexchange.com/questions/18197/why-shouldnt-we-roll-our-own[roll your own crypto]. This is just a pet project to understand how things work.
+
+== Overview
+Given the availability of technology in our society, as well as the need for tools supporting democratic decision making, it is not surprising that e-voting systems are a growing field of research.
+But unlike their name suggests it, e-voting shemes are not only digitalized version of traditional voting systems where paper ballots are counted by hand.
+They go a step further by leveraging cryptographic methods to provide privacy and transparency guarantees.
+
+The aim of this project is to gain an understanding of how this type of systems work with some hands-on experimenting. We will go over some background information on voting schemes, give a description of the scheme implemented in this project and finish with a few pointers about keys parts of the implementation.
+
+=== Getting started
+The `+sbt run+` command runs a mock election with 3 candidates and 10 voters. The content of the encrypted ballots is displayed along with their corresponding proofs. A duplicated but valid ballot is also included, forged by a malicious voter using the re-randomization of the proof of encryption, which is based on a weak Fiat-Shamir transformation [Bernhard2012]. We will go over each step of the voting process in the next section.
+
+.Result of mock election
+[%collapsible]
+====
+  --------------------------------------------------
+  Random votes
+  0:  0 0 1
+  1:  0 1 0
+  2:  1 0 0
+  3:  0 1 0
+  4:  1 0 0
+  5:  0 1 0
+  6:  0 0 1
+  7:  0 0 1
+  8:  0 0 1
+  9:  0 1 0
+  Sum : 2 4 4
+  --------------------------------------------------
+  Setup
+  Domain    : p=107 q=53 g=75
+  Secret key: x=18
+  Public key: y=35
+  Proof of key generation: (10, 45, 14)
+  Verification           : true
+  --------------------------------------------------
+  Encrypted ballots
+  0:  ( 56, 49) ( 76, 23) ( 11, 34)
+  1:  ( 69, 14) ( 75, 57) ( 99,105)
+  2:  ( 86, 19) ( 75, 35) ( 23, 99)
+  3:  ( 86, 83) ( 16, 44) ( 76, 23)
+  4:  ( 19, 39) ( 33, 47) (  1,  1)
+  5:  ( 79, 81) ( 42,100) (  4, 36)
+  6:  ( 42, 37) ( 19, 69) (101, 92)
+  7:  ( 44, 42) ( 75, 35) ( 81, 61)
+  8:  (  3, 25) ( 44, 42) ( 42,100)
+  9:  ( 48, 86) ( 39, 49) ( 25, 87)
+  10:  ( 99,105) ( 47, 76) ( 85,100)
+  Proofs of ballot encryption
+  0:  (  9, 90,25,46) ( 56, 33,33,16) ( 69, 14,23,34) ( 56, 52,39,29) ( 99,105, 0,43) ( 37, 10,44,21) | ( 64, 16,42,36) ( 11, 19,31,21) | verification: true
+  1:  ( 92, 33, 7,28) ( 81, 89, 6,13) ( 81, 85, 7,10) ( 57, 13,17,36) ( 35, 34,11,14) ( 39, 52,40, 9) | (  4, 87, 8,23) ( 48, 86,51,33) | verification: true
+  2:  ( 13, 79,52,12) ( 53, 89, 6,40) ( 25, 87,28,15) (100,  1,36,34) ( 30, 16,20,49) ( 39, 52,40, 4) | (101, 85,39,19) (  1,  1, 2,19) | verification: true
+  3:  ( 10, 52,33,24) ( 90, 52,26,21) ( 61, 64, 3,15) ( 23, 99,25,43) ( 27,  3,49,31) ( 14, 52,25, 6) | ( 39, 35,30, 1) ( 16, 12,31,35) | verification: true
+  4:  ( 16, 10,26,46) ( 35, 34,32,19) ( 10, 52,41,22) (101, 30,33,49) ( 16, 12,52,22) ( 36, 14,17,39) | ( 64, 48,28,31) ( 33, 47,32, 4) | verification: true
+  5:  ( 13, 41,45, 5) ( 87, 39,10,15) ( 33, 49,49,12) ( 35, 34,10,34) ( 56, 49, 3,21) ( 92, 89,31, 4) | ( 30, 40,12,39) ( 53, 89,38,15) | verification: true
+  6:  ( 69, 14,42,30) ( 30, 30,44,41) ( 56, 49,21,40) ( 12, 49,23,34) ( 41, 35,20,27) ( 92, 33,34, 8) | ( 40, 27,32,29) ( 14, 40, 2, 8) | verification: true
+  7:  ( 83, 57,14,50) ( 49, 75,20,39) ( 61, 48,35,37) ( 57, 90, 3,22) ( 11, 92,24,34) ( 35, 34,37,23) | ( 79, 90,29,31) ( 23, 99, 6,44) | verification: true
+  8:  ( 81, 75,42, 8) ( 13, 44,18,11) ( 64,  4,41,39) ( 13,  1,45,28) ( 13, 13,37, 9) ( 90, 79,52,36) | (  4, 87, 8,47) ( 53, 89,40,42) | verification: true
+  9:  ( 49, 92,48,28) ( 76, 83,34,21) (105, 19,41, 0) ( 10, 52,18,47) (  1,  1, 2,27) (105, 13,31, 0) | ( 12, 30,13,23) (101, 64,47,51) | verification: true
+  10:  ( 49, 92,48,46) ( 76, 83,34,47) (105, 19,41,22) ( 10, 52,18,14) (  1,  1, 2,41) (105, 13,31, 5) | ( 12, 30,13,31) (101, 64,47,31) | verification: true
+  --------------------------------------------------
+  Tally result
+  (  3, 27) ( 76,  9) ( 23, 85)
+  --------------------------------------------------
+  Voting result
+  Sum : 2 5 4
+  Proof of decryption: ( 34,39,21) ( 86, 3,15) ( 87, 5,13)
+  Verification       : true
+  --------------------------------------------------
+====
+
+=== Voting schemes
+In traditional voting systems, each voter puts a piece of paper carrying her vote in a box. Some trusted administrator then opens the box, counts the votes and publishes the result.
+
+The class of schemes we are talking about follow the same pattern, except that instead of casting a piece of paper in a box, the vote is encrypted and added on a public bulletin board. The encrypted ballots can then be tallied by the person or group of persons which have the necessary decryption material.
+
+Voting schemes of this type aim at lowering the trust in the entity organizing the voting process while providing some security guarantees. 
+They typically try to preserve the secrecy of each ballot while being publicly verifiable, so everyone is convinced of the integrity of the voting result while learning nothing about the individual votes. But these privacy and verifiablity properties can never be both fully satisfied, and a trade-off is always necessary to achieve usable schemes.
+
+We are now going to have a look at the Helios voting scheme. It was more focused on verifiability in the initial paper <<Adida2009>> but further research like <<Bernhard2011>> has been targeting ballot privacy.
+
+
+== Helios
+
+In this section we discuss the voting scheme implemented in this project, namely the Helios 2.0 scheme described in <<Adida2009>>. Note that the description is simplified and does not contain all the original details.
+
+As depicted in the diagram below, the scheme consists of the four algorithms, namely `+vote+`, `+cast+`, `+tally+` and `+reveal+`.
+
+....
+                      Public bulletin board
+ 
+                   +--------------------------+
+                   |                          |
+            cast   |  +--------------------+  |   tally
+Vote 1  -----------+->| Encrypted ballot 1 +--+-------+
+                   |  +--------------------+  |       |
+                   |                          |       |
+                   |  +--------------------+  |       |
+Vote 2  -----------+->| Encrypted ballot 2 +--+-------+
+                   |  +--------------------+  |       |
+                   |                          |       |
+ ...    -----------+->         ...         ---+-------+
+                   |                          |       |
+                   |  +--------------------+  |       |    +------------------+   reveal
+Vote n  -----------+->| Encrypted ballot n +--+-------+--->| Encrypted result +------------> Result
+                   |  +--------------------+  |            +------------------+
+                   |                          |
+                   +--------------------------+
+  
+      |                |                                                    |                |         
+      +----------------+                                                    +----------------+
+      Proof of encryption                                                   Proof of decryption
+....
+
+Voters start by preparing a ballot containing an encryption of their vote with a proof of its validity. Once it is ready they cast their ballot on the public bulletin board. After the end of the voting period the ballots are tallied without being individually decrypted. The final result is then revealed by decrypting the combination of ballots and a corresponding proof is generated.
+
+We will now discuss in more details how the encryption and the proofs of knowledge work in Helios. We will also mention one of the possible attack exploiting a weakness in the proof of encryption.
+
+=== Encryption
+A vote is a sequence of 0's and 1's but at most one 1, indicating for which cantidate the vote is. For example:, `(0, 1, 0)` is a vote for the second candidate.
+
+To form a ballot, each element of the vote is encrypted seperately using https://en.wikipedia.org/wiki/ElGamal_encryption[ElGamal encryption]. Since ElGamal is homomorphic, the ballots can be combined element wise with each other and the result contains the sum of the votes for each candidate. 
+
+Homomorphic encryption:: `+enc(a) * enc(b) == enc(a + b)+`
+
+The voting administrator who holds the secret key can then reveal the result. Note that the current implementation does not (yet!) handle mutliple administrators and distributed encryption: there is only one private key to reveal the voting result.
+
+==== Example
+.Details of Alice and Bob's encrypted ballots
+[%collapsible]
+====
+* Alice wants to vote for the first candidate and Bob for the second: `v~a~ = (1, 0, 0)` and `v~b~ = (0, 1, 0)`
+* let `q = 53`, `p = 2q + 1 = 107` and `g = 75`: `+g+` generates a subgroup of `Z/pZ` of order `q`
+* let the key pair be `x = 18` and `h = g^x^ = 35 mod p`
+* the encrypted ballots can be calulated as follows: 
+** choose a random value, say `r = 2`
+** encryption of the first element of Alice's vote: `b~a1~ = (g^r^, h^r^ * g^m^) = (61, 48 * 75) = (61, 69)`
+** note that the vote is projected in `Z/pZ` before being encrypted with `g^m^`
+** similarly for the first element of Bob's vote with `r = 3`: `b~b1~ = (81, 75 * 1) = (81, 75)`
+* the encrypted sum for the first candidate is: `c~1~ = b~a1~ * b~b1~ = (61 * 81, 69 * 75) = (19, 39)`
+* and once decrypted: `s~1~ = 39 * (19^x^)^-1^ = 39 * 69^-1^ = 39 * 76 = 75 = g^1^`
+* the sum of the votes for the first candidate is indeed `1`
+====
+
+=== Proofs of knowledge
+In general, a https://en.m.wikipedia.org/wiki/Zero-knowledge_proof[zero-knowlege proof] is a protocol where a prover P attempts to convince a verifier V that she holds a piece of information without revealing anything about it. 
+A proof can be made non-interactive by using a so called https://en.m.wikipedia.org/wiki/Fiat%E2%80%93Shamir_heuristic[Fiat-Shamir] transformation, which replaces the challenge sent by V with the hash of a public value.
+
+In our case, each voter has to convince any observer that its ballot contains only encryptions of 0 or 1.
+This is achieved with a _disjunctive proof of log equality_, see <<Cortier2013>> for a proper explanation.
+
+==== Example
+.Details of Alice's proof of encryption
+[%collapsible]
+====
+TODO
+====
+
+=== Attack
+As explained in <<Bernhard2012>>, ElGamal as well as the Fiat-Shamir transformation used in Helios are https://en.m.wikipedia.org/wiki/Malleability_(cryptography)[malleable], which means that a ballot can be duplicated by re-randomization.
+
+A possible consequence is that some malicious voters can collude against another one by duplicating its vote, which allows them to gain some information about it if they are numerous enough. In the extreme case, half of the voters could be malicious and the vote of their target could be determined with certainty.
+
+This breaches ballot privacy and illustrates why it should not be possible for a voter to produce a valid ballot containing the same vote as an existing ballot.
+
+== Implementation
+
+As it often happens with cryptography related algorithms or protocols, some properties and security guarantees can seem a bit magic at first glance. A method to get some global understanding and intuition about why something works can be to go through each step with simple parameters and to observe the result. Translating these steps into an executable computer program is the next step to verify that this understanding leads to a concrete application.
+
+This repo contains a simplified implementation of Helios without any dependency: the necessary discrete algebra objects and cryptographic primitives are implemented from scratch. Additionally, the code aims to be as clear and simple as possible in order to show how the different part of the scheme are put together. The strong typing of Scala helps to give expressive signatures to each function and make their role explicit.
+
+=== Structure
+We will go over the different layers composing the code in a bottom-up approach, going from the basic building blocks up to the final voting scheme.
+
+The lowest layer of this implementation is the link:src/main/scala/algebra/[algebra] package. It contains the logic about https://mathworld.wolfram.com/CyclicGroup.html[cyclic groups] and https://mathworld.wolfram.com/FiniteField.html[finite fields] on which the encryption is based. 
+[source,scala]
+----
+trait Domain[Z: Integral, F <: Field[Z], G <: Group[Z, F], Gen <: Generator[Z, F, G]]:
+  val base: G
+  val exponent: F
+  val generator: Gen
+----
+The link:src/main/scala/algebra/Domain.scala[Domain] trait englobes a discrete group `base`, which is used later as the ElGamal public key space, with a finite field `exponent`, corresponding to the private key space. The `generator` projects elements of the `exponent` field on a subgroup of the `base` group. Note that `Domain` is "data type agnostic": the type parameter `Z` can be any type representing an integer - such as `Int`, `Long` or `BigInt` - in order to handle different sizes of numbers.
+
+On top of this is built the link:src/main/scala/crypto/[crypto] package. It contains an implementation of the link:src/main/scala/crypto/ElGamal.scala[ElGamal encryption scheme] and the link:src/main/scala/crypto/ProofOfKnowledge.scala[proofs of knowledge] needed for Helios.
+[source,scala]
+----
+trait EncryptionScheme[PT, CT, PK, SK, D, R]:
+  val gen: (D, () => R) => (PK, SK)
+  val enc: (PT, PK, () => R) => CT
+  val dec: (CT, SK) => PT
+
+trait HomomorphicEncryption[C]:
+  val combine: (C, C) => C
+
+class ElGamal extends EncryptionScheme[...] with HomomorphicEncryption[...]:
+  ...
+----
+The `EncryptionScheme` trait is an example of the conciseness achievable in Scala: it states that the `enc` function takes a plaintext, the public key, a source of randomness and return a ciphertext.
+
+As last layer, the link:src/main/scala/voting/[voting] package defines the link:src/main/scala/voting/definition/VotingScheme.scala[VotingScheme] trait and its main implementation link:src/main/scala/voting/definition/Helios.scala[Helios].
+
+=== Helios
+
+[source,scala]
+----
+class Helios[N <: Nat]
+    extends VotingScheme[
+      SecretKey,
+      PublicKey,
+      Vote[N],
+      Ballot[N],
+      BulletinBoard[N],
+      TallyResult[N],
+      VotingResult[N],
+      DomainInt,
+      Random[Int]
+    ]:
+  ...
+
+trait VotingScheme[X, Y, V, B, BB, TR, VR, D, R]:
+  val setup: (D, R) => (X, Y, BB)
+  val vote: (V, Y, R) => B
+  val cast: (B, Y, BB) => Either[BallotProcessingError, BB]
+  val tally: (BB, Y) => TR
+  val reveal: (BB, TR, X, R) => VR
+----
+
+The link:src/main/scala/voting/definition/VotingScheme.scala[VotingScheme] trait defines the five functions that a scheme has to implement to run a voting process. `setup` takes the domain containing the algebraic objects and a source of randomness to provide a pair of secret/public keys as well as a bulletin board. The `vote` function allows each voter to encrypt her vote and form a ballot, which they add on the bulletin board with the `cast` function. Note here that all objects are immutable in this implementation, thus `cast` returns a new instance of bulletin board which should contain the added ballot. The `tally` function combines the ballots on the bulletin board into an intermediary result, which the `reveal` function decrypts using the secret key. A source of randomness is also needed for `reveal` to generate a randomized proof of decryption.
+
+link:src/main/scala/voting/definition/Helios.scala[Helios] takes a type parameter `N` representing the number of candidates in an election and defines concrete types for each of the type parameters of `VotingScheme`. The implementation of each function contains the wiring between the encryption scheme and the proofs on knowledge following the description in the previous section.
+
+In order to illustrate how to use this implementation of Helios can be used, link:src/main/scala/Main.scala[Main] runs a demo with 3 candidates, 10 voters and one malicious voter. It also displays the content of each data structure to allow inspection from the vote until the result.
+
+
+== Conclusion
+
+Diving into the subject of voting schemes allowed us to see how some desirable privacy and verifiability properties can be provided by leveraging well known cryptographic constructions. But as we observed, actually understanding such schemes requires some mathematics and computer science background, which raises the question of wider adoption of such systems for large scale elections and how to make the voting result trusted by the population.
+
+
+[bibliography]
+== References
+
+* [[[Adida2009]]] B Adida, O De Marneffe, O Pereira, J Quisquater. *Electing a university president using open-audit voting: Analysis of real-world use of Helios*. EVT/WOTE. 2009.
+* [[[Bernhard2011]]] D Bernhard, V Cortier, O Pereira, B Smyth, B Warinschi. *Adapting Helios for provable ballot privacy*. European Symposium on Research in Computer Security. 2011.
+* [[[Bernhard2012]]] D Bernhard, O Pereira, B Warinschi. *How not to prove yourself: Pitfalls of the fiat-shamir heuristic and applications to helios*. International Conference on the Theory and Application of Cryptology and Information Security. 2012.
+* [[[Cortier2013]]] V Cortier, B Smyth. *Attacking and fixing Helios: An analysis of ballot secrecy*. Journal of Computer Security. 2013.

@@ -1,7 +1,7 @@
 package algebra
 
 class GeneratorIntSuite extends munit.FunSuite:
-  test("check order of generator") {
+  test("order of generator is checked") {
     val group = GroupInt(23)
     val field = FieldInt(11)
 

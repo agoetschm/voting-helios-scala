@@ -9,7 +9,7 @@ import voting.scheme.definition.BallotProcessingError
 import Helios._
 
 class HeliosSuite extends munit.FunSuite:
-  test("run voting session") {
+  test("voting session is successful") {
     val randomSource       = scala.util.Random(seed = 42)
     val numberOfVoters     = 40
     val numberOfCandidates = 3
@@ -42,7 +42,7 @@ class HeliosSuite extends munit.FunSuite:
         accMaybeBb match
           case l @ Left(_) => l
           case Right(accBb) =>
-            helios.processBallot(ballot, pk, accBb)
+            helios.cast(ballot, pk, accBb)
       }
 
     maybeUpdatedBb match
