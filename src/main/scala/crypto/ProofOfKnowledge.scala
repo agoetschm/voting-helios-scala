@@ -9,9 +9,8 @@ import math.Integral.Implicits.infixIntegralOps
 
 trait ProofOfKnowledge
 
-// TODO test
 object ProofOfKnowledge:
-  // proof that log_g h = x
+  // prove knowledge of x such that log_g h = x
   // https://www.zkdocs.com/docs/zkdocs/zero-knowledge-protocols/schnorr/
   def proveLog[
       Z: Integral,

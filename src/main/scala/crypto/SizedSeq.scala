@@ -8,4 +8,11 @@ case class SizedSeq[N <: Nat, T](size: N, underlying: Seq[T]):
     SizedSeq(size, underlying.map(f))
   def zip[T2](other: SizedSeq[N, T2]): SizedSeq[N, (T, T2)] =
     SizedSeq(size, underlying.zip(other.underlying))
-  def reduce[B >: T](f: (T, T) => T): B = underlying.reduce(f)
+  def zipWithIndex: SizedSeq[N, (T, Int)] =
+    SizedSeq(size, underlying.zipWithIndex)
+  def reduce[B >: T](f: (T, T) => T): B     = underlying.reduce(f)
+  def forall(p: T => Boolean): Boolean      = underlying.forall(p)
+  def foldLeft[A](z: A)(op: (A, T) => A): A = underlying.foldLeft(z)(op)
+
+object SizedSeq:
+  def fill[N <: Nat, T](size: N, elem: T) = SizedSeq(size, Seq.fill(size.n)(elem))

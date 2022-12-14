@@ -10,7 +10,7 @@ final case class GroupInt(p: Int)
   override val order: Int = p - 1
   override def apply(z: Int): GroupInt.Element =
     val mod = AlgebraIntImpl.nonNegativeModulo(z, p)
-    require(mod != 0, s"integer [$mod] is equal to 0") // TODO test this
+    require(mod != 0, s"integer [$mod] is equal to 0")
     GroupInt.Element(mod, this)
 
 object GroupInt:

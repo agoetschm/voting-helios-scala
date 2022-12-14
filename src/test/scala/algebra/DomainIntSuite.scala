@@ -1,7 +1,7 @@
 package algebra
 
 class DomainIntSuite extends munit.FunSuite:
-  test("exponent is be reducible modulo q") {
+  test("exponent is reducible modulo q") {
     val domain = DomainInt(107, 53, 75)
     val g      = domain.generator
     val exp    = domain.exponent

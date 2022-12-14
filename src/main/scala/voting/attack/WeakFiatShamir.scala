@@ -2,8 +2,8 @@ package voting.attack
 
 import algebra.DomainInt
 import crypto.Nat
-import voting.scheme.helios.Helios.Ballot
-import voting.scheme.helios.Helios.PublicKey
+import voting.scheme.Helios.Ballot
+import voting.scheme.Helios.PublicKey
 
 object WeakFiatShamir:
   def rerandomize[N <: Nat](
@@ -11,7 +11,7 @@ object WeakFiatShamir:
       domain: DomainInt,
       pubKey: PublicKey
   ): Ballot[N] =
-    val u          = domain.exponent(7) // TODO random
+    val u          = domain.exponent(7) // can be random
     val h          = pubKey.h
     val candidates = ballot.candidates.map((a, b) => (a * domain.generator(u), b * (h ^ u)))
     val proof = ballot.proofOfEncryption.copy(

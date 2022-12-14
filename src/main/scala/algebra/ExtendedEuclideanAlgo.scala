@@ -2,8 +2,10 @@ package algebra
 
 import scala.annotation.tailrec
 
+// solves Bezout's identity: ax + by = gcd(a,b)
+// input: a, b
+// output: x, y
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-// TODO test
 object ExtendedEuclideanAlgo {
   private case class Iteration(r1: Int, r2: Int, x1: Int, x2: Int, y1: Int, y2: Int)
 
@@ -23,7 +25,7 @@ object ExtendedEuclideanAlgo {
         )
       eea(next)
 
-  def apply(a: Int, b: Int) =
+  def apply(a: Int, b: Int): (Int, Int) =
     val init = Iteration(a, b, 1, 0, 0, 1)
     eea(init)
 }
